@@ -50,4 +50,74 @@ require("lazy").setup({
       },
     },
   },
+  require("plugins.mason"),
+  {
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdate",
+    config = function()
+      require("nvim-treesitter.configs").setup({
+        ensure_installed = { "c", "lua", "vim", "javascript", "html", "css", "java", "latex", "cpp" }, -- Add languages you want to install
+        auto_install = true,
+        highlight = {
+          enable = true, -- Enable syntax highlighting
+          disable = { "yaml" }, -- Languages to disable highlighting for (optional)
+        },
+        indent = { enable = true }, -- Enable indentation based on treesitter
+        -- Add other configurations as needed (e.g., incremental_selection, textobjects)
+      })
+    end,
+  },
+  {
+    "mason-org/mason-lspconfig.nvim",
+    dependencies = { "mason.nvim" },
+    config = function()
+      require("mason-lspconfig").setup()
+      require("mason-lspconfig").setup_handlers({
+        function(server_name)
+          require("lspconfig")[server_name].setup({})
+        end,
+      })
+    end,
+  },
+
+  {
+    "nvimtools/none-ls.nvim",
+    dependencies = { "williamboman/mason.nvim" },
+    config = function()
+      local null_ls = require("null-ls")
+      null_ls.setup({
+        sources = {
+          null_ls.builtins.formatting.clang_format,
+          null_ls.builtins.diagnostics.cppcheck,
+          null_ls.builtins.formatting.google_java_format,
+          null_ls.builtins.diagnostics.checkstyle,
+          null_ls.builtins.formatting.latexindent,
+          null_ls.builtins.diagnostics.chktex,
+        },
+      })
+
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        callback = function()
+          vim.lsp.buf.format({ async = false })
+        end,
+      })
+    end,
+  },
+  {
+    "jay-babu/mason-null-ls.nvim",
+    dependencies = { "williamboman/mason.nvim", "nvimtools/none-ls.nvim" },
+    config = function()
+      require("mason-null-ls").setup({
+        ensure_installed = {
+          "clang-format",
+          "cppcheck",
+          "google-java-format",
+          "checkstyle",
+          "latexindent",
+          "chktex",
+        },
+        automatic_installation = true,
+      })
+    end,
+  },
 })
